@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Montagem Beat Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Righteous&family=Syne:wght@400;600;800&family=Space+Mono:wght@400;700&family=DM+Serif+Display&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root { --tr: all 0.4s cubic-bezier(0.4,0,0.2,1); }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Syne',sans-serif; min-height:100vh; overflow-x:hidden; transition:background .4s,color .4s; }
+
+body.neon    { --bg:#07070f;--bg2:#0d0d1a;--surf:#111122;--card:#13132a;--bdr:#1e1e3f;--a1:#00ffe1;--a2:#ff2d78;--a3:#ffe600;--tx:#e8e8ff;--mu:#5a5a8a; }
+body.minimal { --bg:#f5f4f0;--bg2:#eeede8;--surf:#e8e7e2;--card:#ffffff;--bdr:#dddcd7;--a1:#1a1a2e;--a2:#c0392b;--a3:#e67e22;--tx:#1a1a2e;--mu:#8a8a7a; }
+body.retro   { --bg:#1a0a00;--bg2:#260d00;--surf:#2e1200;--card:#3a1800;--bdr:#5c2a00;--a1:#ffcc00;--a2:#00b04f;--a3:#ff6b00;--tx:#fff8e7;--mu:#a07050; }
+body { background:var(--bg); color:var(--tx); }
+
+body.neon::before { content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 70% 40% at 15% 5%,rgba(0,255,225,.07) 0%,transparent 55%),radial-gradient(ellipse 50% 35% at 85% 85%,rgba(255,45,120,.07) 0%,transparent 55%); }
+body.neon::after  { content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.025) 2px,rgba(0,0,0,.025) 4px); }
+body.retro::before{ content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:repeating-linear-gradient(45deg,rgba(255,204,0,.03) 0,rgba(255,204,0,.03) 2px,transparent 2px,transparent 20px); }
+
+#themebar { position:sticky;top:0;z-index:200;display:flex;justify-content:center;gap:.5rem;padding:.65rem 1rem;backdrop-filter:blur(20px);border-bottom:1px solid var(--bdr);background:rgba(0,0,0,.25);transition:var(--tr); }
+body.minimal #themebar { background:rgba(245,244,240,.9); }
+body.retro   #themebar { background:rgba(26,10,0,.92); }
+.tbtn { padding:.3rem .9rem;border-radius:50px;border:1.5px solid var(--bdr);background:transparent;color:var(--mu);font-family:'Space Mono',monospace;font-size:.63rem;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:var(--tr); }
+.tbtn.on,.tbtn:hover { border-color:var(--a1);color:var(--a1);background:rgba(128,128,128,.1); }
+
+.wrap { max-width:920px;margin:0 auto;padding:2.5rem 1.2rem 5rem;position:relative;z-index:2; }
+
+.logo { text-align:center;margin-bottom:2.5rem; }
+.logo-title { display:block;line-height:.92;font-size:clamp(3rem,11vw,6.5rem);font-weight:900;letter-spacing:.05em;background:linear-gradient(135deg,var(--a1) 0%,var(--a2) 50%,var(--a3) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:hpulse 3s ease-in-out infinite; }
+body.neon    .logo-title { font-family:'Bebas Neue',sans-serif; }
+body.minimal .logo-title { font-family:'DM Serif Display',serif; }
+body.retro   .logo-title { font-family:'Righteous',sans-serif; }
+@keyframes hpulse { 0%,100%{filter:drop-shadow(0 0 20px rgba(0,255,225,.4))} 50%{filter:drop-shadow(0 0 50px rgba(255,45,120,.55))} }
+.logo-sub { font-family:'Space Mono',monospace;font-size:.68rem;letter-spacing:.28em;text-transform:uppercase;color:var(--mu);margin-top:.7rem; }
+
+/* API / MODEL BANNER */
+#keybanner { background:var(--card);border:1px solid var(--a2);border-radius:12px;padding:1.2rem 1.5rem;margin-bottom:1.5rem;border-top:2px solid var(--a2); }
+#keybanner p { font-size:.85rem;line-height:1.6;margin-bottom:.8rem;opacity:.85; }
+#keybanner a { color:var(--a1); }
+.key-row { display:flex;gap:.6rem;margin-bottom:.7rem; }
+#apikey { flex:1;background:var(--surf);border:1.5px solid var(--bdr);border-radius:8px;color:var(--tx);font-family:'Space Mono',monospace;font-size:.82rem;padding:.65rem 1rem;outline:none;transition:border-color .2s; }
+#apikey:focus { border-color:var(--a1); }
+#savekeybtn { padding:.65rem 1.2rem;border-radius:8px;border:none;background:var(--a1);color:#000;font-weight:700;font-size:.82rem;cursor:pointer;white-space:nowrap;transition:opacity .2s; }
+#savekeybtn:hover { opacity:.82; }
+#keystatus { font-size:.75rem;margin-top:.5rem;font-family:'Space Mono',monospace;color:var(--a2); }
+#keystatus.ok { color:var(--a1); }
+.model-row { display:flex;gap:.6rem;align-items:center;flex-wrap:wrap; }
+.model-row label { font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--a3);white-space:nowrap;margin:0; }
+#modelsel { flex:1;min-width:180px;background:var(--surf);border:1.5px solid var(--bdr);border-radius:8px;color:var(--tx);font-family:'Space Mono',monospace;font-size:.78rem;padding:.55rem .8rem;outline:none;transition:border-color .2s;appearance:none; }
+#modelsel:focus { border-color:var(--a3); }
+#modelcustom { flex:1;min-width:160px;background:var(--surf);border:1.5px solid var(--bdr);border-radius:8px;color:var(--tx);font-family:'Space Mono',monospace;font-size:.78rem;padding:.55rem .8rem;outline:none;transition:border-color .2s;display:none; }
+#modelcustom.show { display:block; }
+#modelcustom:focus { border-color:var(--a3); }
+
+/* CARD */
+.card { background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:1.8rem;margin-bottom:1.4rem;border-top:2px solid var(--a1);position:relative;overflow:hidden;transition:background .4s,border-color .4s; }
+body.retro   .card { border:3px solid var(--bdr);box-shadow:4px 4px 0 var(--a3);border-radius:4px; }
+body.minimal .card { border:none;box-shadow:0 2px 20px rgba(0,0,0,.07); }
+
+/* FORM */
+.row2 { display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;margin-bottom:1.1rem; }
+@media(max-width:520px){.row2{grid-template-columns:1fr;}}
+.fld { margin-bottom:1.1rem; }
+label { display:block;font-family:'Space Mono',monospace;font-size:.63rem;letter-spacing:.2em;text-transform:uppercase;color:var(--a1);margin-bottom:.42rem; }
+body.minimal label { color:var(--mu); }
+body.retro   label { color:var(--a3); }
+input[type=number],select,textarea { width:100%;background:var(--surf);border:1.5px solid var(--bdr);border-radius:8px;color:var(--tx);font-family:'Syne',sans-serif;font-size:.95rem;padding:.68rem 1rem;outline:none;transition:border-color .2s;appearance:none; }
+input:focus,select:focus,textarea:focus { border-color:var(--a1); }
+select option { background:var(--surf);color:var(--tx); }
+textarea { resize:vertical;min-height:88px;line-height:1.6; }
+body.retro input,body.retro select,body.retro textarea { border-radius:4px; }
+
+.apptog { display:flex;gap:.7rem; }
+.abtn { flex:1;padding:.72rem;border-radius:8px;border:2px solid var(--bdr);background:var(--surf);color:var(--mu);font-family:'Space Mono',monospace;font-size:.78rem;letter-spacing:.04em;cursor:pointer;text-align:center;transition:var(--tr); }
+.abtn.on { border-color:var(--a1);color:var(--a1);background:rgba(128,128,128,.07); }
+body.retro .abtn.on { background:var(--a1);color:#000;border-color:var(--a1); }
+
+#genbtn { width:100%;padding:1.05rem;margin-top:1.1rem;border:none;border-radius:10px;cursor:pointer;background:linear-gradient(135deg,var(--a1),var(--a2));color:#000;font-weight:900;font-size:1.25rem;letter-spacing:.1em;text-transform:uppercase;transition:all .2s;font-family:'Bebas Neue',sans-serif; }
+body.minimal #genbtn { font-family:'Nunito',sans-serif;font-size:1rem;border-radius:50px; }
+body.retro   #genbtn { font-family:'Righteous',sans-serif;box-shadow:4px 4px 0 var(--a2);border-radius:4px; }
+#genbtn:hover:not(:disabled) { transform:translateY(-2px);box-shadow:0 10px 35px rgba(0,255,225,.4); }
+body.retro #genbtn:hover:not(:disabled) { transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--a2); }
+#genbtn:disabled { opacity:.45;cursor:not-allowed;transform:none!important; }
+
+.errbox { display:none;margin-top:1rem;padding:.9rem 1.1rem;background:rgba(255,45,120,.1);border:1px solid var(--a2);border-radius:8px;color:var(--a2);font-size:.88rem;line-height:1.6; }
+.errbox.show { display:block; }
+
+/* LOADING */
+#loading { display:none;text-align:center;padding:2.5rem 1rem; }
+#loading.show { display:block; }
+.viz { display:flex;justify-content:center;align-items:flex-end;gap:5px;height:50px;margin-bottom:1rem; }
+.vbar { width:6px;border-radius:3px;background:var(--a1);animation:vb .7s ease-in-out infinite; }
+.vbar:nth-child(2n){background:var(--a2)}.vbar:nth-child(3){background:var(--a3)}
+.vbar:nth-child(1){animation-delay:0s}.vbar:nth-child(2){animation-delay:.1s}.vbar:nth-child(3){animation-delay:.2s}.vbar:nth-child(4){animation-delay:.3s}.vbar:nth-child(5){animation-delay:.15s}.vbar:nth-child(6){animation-delay:.25s}.vbar:nth-child(7){animation-delay:.05s}
+@keyframes vb{0%,100%{height:8px;opacity:.5}50%{height:46px;opacity:1}}
+.ltxt { font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.25em;text-transform:uppercase;color:var(--a1);animation:blnk 1.2s ease-in-out infinite; }
+@keyframes blnk{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* RESULT */
+#result { display:none; }
+#result.show { display:block; }
+.sec { background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:1.65rem;margin-bottom:1.3rem;border-top:2px solid var(--a1);overflow:hidden;animation:fadeUp .45s ease both; }
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+.sec:nth-child(2){animation-delay:.07s}.sec:nth-child(3){animation-delay:.14s}.sec:nth-child(4){animation-delay:.21s}.sec:nth-child(5){animation-delay:.28s}.sec:nth-child(6){animation-delay:.35s}.sec:nth-child(7){animation-delay:.42s}
+body.retro   .sec { border:3px solid var(--bdr);box-shadow:3px 3px 0 var(--a1);border-radius:4px; }
+body.minimal .sec { border:none;box-shadow:0 2px 20px rgba(0,0,0,.07); }
+
+.sec-title { font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.07em;color:var(--a1);margin-bottom:1.1rem;display:flex;align-items:center;gap:.5rem; }
+body.minimal .sec-title { font-family:'DM Serif Display',serif;font-size:1.25rem;letter-spacing:0;color:var(--tx); }
+body.retro   .sec-title { font-family:'Righteous',sans-serif;color:var(--a3); }
+
+.tag { display:inline-block;padding:.18rem .6rem;border-radius:50px;font-family:'Space Mono',monospace;font-size:.63rem;letter-spacing:.07em;text-transform:uppercase;margin:.12rem;border:1px solid currentColor; }
+body.retro .tag { border-radius:2px;border-width:2px; }
+
+.badge { display:inline-block;padding:.18rem .55rem;border-radius:4px;font-family:'Space Mono',monospace;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;margin-right:.3rem; }
+.bl { background:rgba(0,255,225,.12);color:var(--a1); }
+.bf { background:rgba(255,230,0,.12);color:var(--a3); }
+
+.pattern { background:var(--surf);border:1px solid var(--a1);border-radius:8px;padding:1rem;font-family:'Space Mono',monospace;font-size:.76rem;line-height:2;white-space:pre-wrap;color:var(--a1);overflow-x:auto;letter-spacing:.05em; }
+body.retro .pattern { border-width:2px;border-radius:0; }
+
+.mtip { margin-top:1rem;background:var(--surf);border-left:3px solid var(--a3);padding:.8rem 1rem;font-size:.87rem;line-height:1.65;color:var(--mu);border-radius:0 8px 8px 0; }
+body.retro .mtip { border-radius:0; }
+
+.step { display:flex;gap:1.1rem;padding:1rem 0;border-bottom:1px solid var(--bdr);align-items:flex-start; }
+.step:last-child { border-bottom:none; }
+.snum { font-family:'Bebas Neue',sans-serif;font-size:1.9rem;color:var(--a2);min-width:2.3rem;line-height:1;flex-shrink:0; }
+body.retro .snum { font-family:'Righteous',sans-serif;font-size:.9rem;background:var(--a3);color:#000;width:2rem;height:2rem;display:flex;align-items:center;justify-content:center;border:2px solid #000;flex-shrink:0;min-width:unset; }
+.stitle { font-weight:700;color:var(--a1);font-size:.93rem;margin-bottom:.28rem; }
+body.minimal .stitle { color:var(--tx); }
+body.retro   .stitle { color:var(--a3); }
+.sdetail { font-size:.87rem;line-height:1.65;opacity:.82;margin-bottom:.45rem; }
+.atip { background:var(--surf);border-left:3px solid var(--a1);border-radius:0 6px 6px 0;padding:.48rem .8rem;font-size:.8rem;color:var(--mu);font-family:'Space Mono',monospace;line-height:1.5; }
+body.retro .atip { border-radius:0; }
+
+.sgrid { display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:.8rem; }
+.scard { background:var(--surf);border:1px solid var(--bdr);border-radius:10px;padding:.88rem;transition:var(--tr); }
+.scard:hover { border-color:var(--a1);transform:translateY(-2px); }
+body.retro .scard { border:2px solid var(--bdr);border-radius:0; }
+body.retro .scard:hover { transform:none; }
+.sname { font-family:'Space Mono',monospace;font-size:.7rem;color:var(--a3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:.22rem; }
+.srole { font-size:.77rem;font-weight:700;color:var(--a2);margin-bottom:.28rem; }
+.sdesc { font-size:.79rem;line-height:1.5;color:var(--mu); }
+
+/* VOCAL TABS */
+.vtabs { display:flex;border-bottom:2px solid var(--bdr);margin-bottom:1rem; }
+.vtab { padding:.5rem 1rem;font-family:'Space Mono',monospace;font-size:.67rem;letter-spacing:.09em;text-transform:uppercase;cursor:pointer;color:var(--mu);background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;transition:var(--tr); }
+.vtab.on { color:var(--a1);border-bottom-color:var(--a1); }
+.vtab:hover { color:var(--a1); }
+.vpanel { display:none; }
+.vpanel.on { display:block;animation:fadeUp .3s ease; }
+.vblock { background:var(--surf);border:1px solid var(--bdr);border-radius:8px;padding:1rem;margin-bottom:.75rem; }
+body.retro .vblock { border:2px solid var(--bdr);border-radius:0; }
+.vlabel { font-family:'Space Mono',monospace;font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--a2);margin-bottom:.5rem; }
+.vcontent { font-family:'Space Mono',monospace;font-size:.82rem;line-height:2;white-space:pre-wrap;color:var(--a1); }
+body.minimal .vcontent { color:var(--tx); }
+body.retro   .vcontent { color:var(--a3); }
+.cgrid { display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:.55rem; }
+.ccell { background:var(--bg2);border:1px solid var(--bdr);border-radius:6px;padding:.6rem .8rem;font-family:'Space Mono',monospace;font-size:.74rem; }
+body.retro .ccell { border-radius:0;border:2px solid var(--bdr); }
+.csyl  { color:var(--a3);font-size:1rem;font-weight:700;margin-bottom:.18rem; }
+.cnote { color:var(--a1);font-size:.68rem; }
+.cdir  { color:var(--a2);font-size:.63rem;margin-top:.1rem; }
+.syl-grid { display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.5rem; }
+
+.mtips { list-style:none; }
+.mtip-row { display:flex;gap:.8rem;align-items:flex-start;padding:.72rem 0;border-bottom:1px dashed var(--bdr);font-size:.89rem;line-height:1.6; }
+.mtip-row:last-child { border-bottom:none; }
+.micon { font-size:1.1rem;flex-shrink:0; }
+
+.refs { display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.75rem; }
+.ref { background:var(--surf);border:1px solid var(--bdr);border-radius:50px;padding:.33rem .88rem;font-size:.79rem;font-family:'Space Mono',monospace;color:var(--mu);transition:var(--tr); }
+body.retro .ref { border-radius:2px; }
+.ref:hover { color:var(--a1);border-color:var(--a1); }
+.slabel { font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--mu);margin-bottom:.55rem; }
+</style>
+</head>
+<body class="neon">
+
+<div id="themebar">
+  <button class="tbtn on" onclick="setTheme('neon',this)">🌆 Neon</button>
+  <button class="tbtn"    onclick="setTheme('minimal',this)">◻ Minimal</button>
+  <button class="tbtn"    onclick="setTheme('retro',this)">🇧🇷 Retro Brasil</button>
+</div>
+
+<div class="wrap">
+
+  <div class="logo">
+    <span class="logo-title">MONTAGEM<br>BEAT STUDIO</span>
+    <div class="logo-sub">Brazilian Funk / Phonk Production Guide · LMMS &amp; FL Studio</div>
+  </div>
+
+  <!-- API KEY -->
+  <div id="keybanner">
+    <p>🔑 Paste your <strong>OpenRouter API key</strong> below — it gives you access to 300+ AI models (free &amp; paid). Get one free at <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a>. Key saved in browser only, never shared.</p>
+    <div class="key-row">
+      <input type="password" id="apikey" placeholder="sk-or-v1-...">
+      <button id="savekeybtn" onclick="saveKey()">Save Key</button>
+    </div>
+    <div id="keystatus"></div>
+    <div class="model-row" style="margin-top:.7rem">
+      <label>🤖 Model</label>
+      <select id="modelsel" onchange="onModelChange()">
+        <optgroup label="── FREE Models ──">
+          <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B (Free)</option>
+          <option value="mistralai/mistral-7b-instruct:free">Mistral 7B (Free)</option>
+          <option value="google/gemma-3-27b-it:free">Gemma 3 27B (Free)</option>
+          <option value="deepseek/deepseek-r1:free">DeepSeek R1 (Free)</option>
+          <option value="qwen/qwen3-8b:free">Qwen3 8B (Free)</option>
+          <option value="mistralai/mistral-small-3.2-24b-instruct:free">Mistral Small 3.2 24B (Free)</option>
+        </optgroup>
+        <optgroup label="── Paid: OpenAI ──">
+          <option value="openai/gpt-4o">GPT-4o</option>
+          <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
+          <option value="openai/o3-mini">o3-mini</option>
+        </optgroup>
+        <optgroup label="── Paid: Anthropic ──">
+          <option value="anthropic/claude-sonnet-4-5">Claude Sonnet 4.5</option>
+          <option value="anthropic/claude-3.5-haiku">Claude 3.5 Haiku</option>
+          <option value="anthropic/claude-opus-4">Claude Opus 4</option>
+        </optgroup>
+        <optgroup label="── Paid: Google ──">
+          <option value="google/gemini-2.5-flash">Gemini 2.5 Flash</option>
+          <option value="google/gemini-2.5-pro">Gemini 2.5 Pro</option>
+        </optgroup>
+        <optgroup label="── Paid: Meta ──">
+          <option value="meta-llama/llama-3.1-405b-instruct">Llama 3.1 405B</option>
+        </optgroup>
+        <optgroup label="── Paid: Mistral ──">
+          <option value="mistralai/mistral-large-2411">Mistral Large</option>
+          <option value="mistralai/codestral-mamba">Codestral Mamba</option>
+        </optgroup>
+        <optgroup label="── Custom ──">
+          <option value="custom">Enter custom model ID...</option>
+        </optgroup>
+      </select>
+      <input type="text" id="modelcustom" placeholder="e.g. openai/gpt-4-turbo">
+    </div>
+    <div style="font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.1em;color:var(--mu);margin-top:.5rem">
+      💡 Free models cost $0. Check <a href="https://openrouter.ai/models" target="_blank" style="color:var(--a1)">openrouter.ai/models</a> for all 300+ options.
+    </div>
+  </div>
+
+  <!-- FORM -->
+  <div class="card">
+    <div class="row2">
+      <div>
+        <label>BPM</label>
+        <input type="number" id="bpm" value="150" min="60" max="220">
+      </div>
+      <div>
+        <label>Musical Key &amp; Octave</label>
+        <select id="key"></select>
+      </div>
+    </div>
+    <div class="fld">
+      <label>Montagem Style</label>
+      <select id="style">
+        <option value="bailao">Montagem Bailão — heavy 808 bass, party energy, crowd drop</option>
+        <option value="catando">Montagem Catando — fast staccato, chaotic vocal chops</option>
+        <option value="tribal">Montagem Tribal — raw tribal percussion, street funk</option>
+        <option value="slowed">Montagem Slowed/Phonk — dark atmosphere, slowed &amp; reverbed</option>
+        <option value="proibidao">Proibidão Funk — aggressive, gritty lo-fi production</option>
+      </select>
+    </div>
+    <div class="fld">
+      <label>DAW / Application</label>
+      <div class="apptog">
+        <div class="abtn on" id="btn-lmms" onclick="setApp('lmms')">🎹 LMMS</div>
+        <div class="abtn"    id="btn-fl"   onclick="setApp('fl')">🎵 FL Studio</div>
+      </div>
+    </div>
+    <div class="fld">
+      <label>Brazilian Vocal Lyrics — optional</label>
+      <textarea id="lyrics" placeholder="e.g. Ela tá catando, catando, catando&#10;Vai no bailão essa noite&#10;Bota pra funkear agora..."></textarea>
+    </div>
+    <button id="genbtn" onclick="generate()">⚡ GERAR BEAT GUIDE</button>
+    <div class="errbox" id="errbox"></div>
+  </div>
+
+  <div id="loading">
+    <div class="viz">
+      <div class="vbar"></div><div class="vbar"></div><div class="vbar"></div>
+      <div class="vbar"></div><div class="vbar"></div><div class="vbar"></div><div class="vbar"></div>
+    </div>
+    <div class="ltxt" id="ltxt">COOKING YOUR MONTAGEM...</div>
+  </div>
+
+  <div id="result"></div>
+</div>
+
+<script>
+// Build key select
+const NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const keyEl=document.getElementById('key');
+[2,3,4,5,6,7].forEach(o=>{
+  const g=document.createElement('optgroup');
+  g.label=`── Octave ${o} ──`;
+  NOTES.forEach(n=>{
+    const op=document.createElement('option');
+    op.value=op.textContent=`${n}${o}`;
+    if(n==='A'&&o===4)op.selected=true;
+    g.appendChild(op);
+  });
+  keyEl.appendChild(g);
+});
+
+let selApp='lmms';
+let apiKey=localStorage.getItem('mbs_key')||'';
+if(apiKey){document.getElementById('apikey').value=apiKey;setKeyStatus('✓ Key loaded',true);}
+
+function setTheme(t,btn){
+  document.body.className=t;
+  document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+}
+function setApp(a){
+  selApp=a;
+  document.getElementById('btn-lmms').classList.toggle('on',a==='lmms');
+  document.getElementById('btn-fl').classList.toggle('on',a==='fl');
+}
+function saveKey(){
+  const k=document.getElementById('apikey').value.trim();
+  if(!k){setKeyStatus('⚠ Please enter your OpenRouter key',false);return;}
+  apiKey=k;localStorage.setItem('mbs_key',k);setKeyStatus('✓ Key saved!',true);
+}
+function onModelChange(){
+  const v=document.getElementById('modelsel').value;
+  document.getElementById('modelcustom').classList.toggle('show',v==='custom');
+}
+function getModel(){
+  const v=document.getElementById('modelsel').value;
+  if(v==='custom'){const c=document.getElementById('modelcustom').value.trim();return c||'meta-llama/llama-3.3-70b-instruct:free';}
+  return v;
+}
+function setKeyStatus(msg,ok){
+  const el=document.getElementById('keystatus');
+  el.textContent=msg;el.className=ok?'ok':'';
+}
+function setVTab(id,btn){
+  document.querySelectorAll('.vpanel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.vtab').forEach(b=>b.classList.remove('on'));
+  document.getElementById(id).classList.add('on');btn.classList.add('on');
+}
+
+async function generate(){
+  const key=document.getElementById('apikey').value.trim()||apiKey;
+  if(!key){showErr('Please enter your OpenRouter API key above first. Get one free at openrouter.ai/keys');return;}
+  const bpm=document.getElementById('bpm').value||'150';
+  const mkey=document.getElementById('key').value;
+  const styleVal=document.getElementById('style').value;
+  const lyrics=document.getElementById('lyrics').value.trim();
+  const appName=selApp==='lmms'?'LMMS':'FL Studio';
+  const SL={bailao:'Montagem Bailão',catando:'Montagem Catando',tribal:'Montagem Tribal',slowed:'Montagem Slowed/Phonk',proibidao:'Proibidão Funk'};
+  const styleLabel=SL[styleVal];
+  const model=getModel();
+
+  const btn=document.getElementById('genbtn');
+  btn.disabled=true;
+  document.getElementById('loading').classList.add('show');
+  document.getElementById('result').classList.remove('show');
+  document.getElementById('result').innerHTML='';
+  document.getElementById('ltxt').textContent='COOKING WITH '+model.split('/').pop().toUpperCase()+'...';
+
+  const prompt=`You are a Brazilian baile funk and phonk music production expert. Return ONLY valid JSON — no markdown, no backticks, no preamble, no extra text.
+
+Beat parameters:
+- Style: ${styleLabel}
+- BPM: ${bpm}
+- Key: ${mkey}
+- DAW: ${appName}
+${lyrics?`- Lyrics: ${lyrics}`:'- No vocals'}
+
+Return this exact JSON:
+{
+  "overview": "3 sentences: style energy, origin, how to capture it authentically",
+  "steps": [{"title":"string","detail":"detailed instruction for ${appName}","appTip":"exact menu path or plugin name in ${appName}"}],
+  "sounds": [{"name":"string","role":"string","description":"exact settings, Hz values, plugin names in ${appName}"}],
+  "drumPattern": "16-step pattern:\\nKICK:   X...X...X...X...\\nSNARE:  ....X.......X...\\nHIHAT:  X.X.X.X.X.X.X.X.\\n808:    X.......X.......",
+  "melodyTips": "specific melody and bassline tips for key ${mkey} at ${bpm}BPM in ${appName}",
+  "vocals": ${lyrics?`{
+    "original": "${lyrics.replace(/\n/g,' / ').replace(/"/g,"'")}",
+    "phonetic": "line by line Brazilian Portuguese phonetics, CAPS = stressed syllables",
+    "syllableBreakdown": [{"word":"word","syllables":"syl-la-bles","stress":"stressed syllable"}],
+    "chopGuide": [{"syllable":"text","pitch":"MIDI note e.g. A4","direction":"up/down/hold","technique":"what to do in ${appName}"}],
+    "noteSequence": "full MIDI note sequence e.g. A4 G4 F4 A4 E4...",
+    "pitchBendTip": "how to apply Montagem pitch bending in ${appName}"
+  }`:'null'},
+  "mixingTips": ["tip1","tip2","tip3","tip4"],
+  "referenceBeats": ["beat1","beat2","beat3","beat4"]
+}
+steps: 9-12 items. sounds: 7-10 items. Be specific, practical, authentic to Brazilian funk.`;
+
+  try {
+    const res=await fetch('https://openrouter.ai/api/v1/chat/completions',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+key,
+        'HTTP-Referer':'https://montagem-beat-studio.local',
+        'X-Title':'Montagem Beat Studio'
+      },
+      body:JSON.stringify({
+        model:model,
+        max_tokens:1000,
+        messages:[
+          {role:'system',content:'You are a Brazilian baile funk and phonk music production expert. Always return only valid JSON with no markdown, no backticks, no extra text.'},
+          {role:'user',content:prompt}
+        ]
+      })
+    });
+    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||`API error ${res.status}`);}
+    const data=await res.json();
+    const raw=data.choices?.[0]?.message?.content||'';
+    const guide=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    render(guide,bpm,mkey,styleLabel,appName,lyrics);
+  } catch(e){
+    showErr('⚠ '+e.message);
+  } finally {
+    btn.disabled=false;
+    document.getElementById('loading').classList.remove('show');
+  }
+}
+
+function showErr(msg){const el=document.getElementById('errbox');el.textContent=msg;el.classList.add('show');}
+
+function render(g,bpm,mkey,style,appName,lyrics){
+  const bc=selApp==='lmms'?'bl':'bf';
+  const MI=['🎚','🔊','🎛','⚡','🎵'];
+  const R=document.getElementById('result');
+
+  let vocHTML='';
+  if(g.vocals&&lyrics){
+    const syl=Array.isArray(g.vocals.syllableBreakdown)
+      ?g.vocals.syllableBreakdown.map(w=>`<div class="ccell"><div class="csyl">${esc(w.syllables||w.word)}</div><div class="cnote">${esc(w.word)}</div><div class="cdir">stress: ${esc(w.stress||'—')}</div></div>`).join('')
+      :`<span style="font-size:.88rem;opacity:.75">${esc(typeof g.vocals.syllableBreakdown==='string'?g.vocals.syllableBreakdown:'See Phonetics tab')}</span>`;
+    const chops=Array.isArray(g.vocals.chopGuide)
+      ?`<div class="cgrid">${g.vocals.chopGuide.map(c=>`<div class="ccell"><div class="csyl">${esc(c.syllable)}</div><div class="cnote">🎵 ${esc(c.pitch)}</div><div class="cdir">${esc(c.direction)} · ${esc(c.technique)}</div></div>`).join('')}</div>`:'' ;
+    vocHTML=`<div class="sec">
+      <div class="sec-title">🎤 VOCAL GUIDE</div>
+      <div class="vtabs">
+        <button class="vtab on" onclick="setVTab('vp1',this)">Phonetics</button>
+        <button class="vtab"    onclick="setVTab('vp2',this)">Syllable Chops</button>
+        <button class="vtab"    onclick="setVTab('vp3',this)">Pitch &amp; MIDI</button>
+      </div>
+      <div id="vp1" class="vpanel on">
+        <div class="vblock"><div class="vlabel">Original Lyrics</div><div class="vcontent">${esc(g.vocals.original)}</div></div>
+        <div class="vblock"><div class="vlabel">Brazilian Portuguese Phonetic Pronunciation</div><div class="vcontent">${esc(g.vocals.phonetic)}</div></div>
+      </div>
+      <div id="vp2" class="vpanel">
+        <div class="vlabel" style="margin-bottom:.75rem">Syllable Breakdown for Montagem Chops</div>
+        <div class="syl-grid">${syl}</div>
+      </div>
+      <div id="vp3" class="vpanel">
+        <div class="vlabel" style="margin-bottom:.75rem">Chop Pitch Map — Each Syllable in ${appName}</div>
+        ${chops}
+        ${g.vocals.noteSequence?`<div class="vblock" style="margin-top:.75rem"><div class="vlabel">Full MIDI Note Sequence</div><div class="vcontent">${esc(g.vocals.noteSequence)}</div></div>`:''}
+        ${g.vocals.pitchBendTip?`<div class="vblock"><div class="vlabel">Pitch Bending in ${appName}</div><div class="vcontent" style="font-family:inherit;line-height:1.7">${esc(g.vocals.pitchBendTip)}</div></div>`:''}
+      </div>
+    </div>`;
+  }
+
+  const mixHTML=Array.isArray(g.mixingTips)
+    ?`<ul class="mtips">${g.mixingTips.map((t,i)=>`<li class="mtip-row"><span class="micon">${MI[i]||'🎵'}</span><span>${esc(t)}</span></li>`).join('')}</ul>`
+    :`<p style="line-height:1.7;opacity:.85">${esc(g.mixingTips)}</p>`;
+
+  R.innerHTML=`
+  <div class="sec">
+    <div class="sec-title">🎯 BEAT OVERVIEW</div>
+    <div style="margin-bottom:.75rem">
+      <span class="badge ${bc}">${appName}</span>
+      <span class="tag" style="color:var(--a1)">${bpm} BPM</span>
+      <span class="tag" style="color:var(--a3)">${mkey}</span>
+      <span class="tag" style="color:var(--a2)">${style}</span>
+    </div>
+    <p style="line-height:1.75;font-size:.95rem;opacity:.85">${esc(g.overview)}</p>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">🥁 DRUM PATTERN (16-Step)</div>
+    <pre class="pattern">${esc(g.drumPattern)}</pre>
+    <div class="mtip">🎹 <strong style="color:var(--tx)">Melody / Bass:</strong> ${esc(g.melodyTips)}</div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">🎛 STEP-BY-STEP — ${appName}</div>
+    ${g.steps.map((s,i)=>`<div class="step"><span class="snum">${String(i+1).padStart(2,'0')}</span><div style="flex:1"><div class="stitle">${esc(s.title)}</div><div class="sdetail">${esc(s.detail)}</div><div class="atip"><span class="badge ${bc}">${appName}</span>${esc(s.appTip)}</div></div></div>`).join('')}
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">🔊 SOUNDS TO USE</div>
+    <div class="sgrid">
+      ${g.sounds.map(s=>`<div class="scard"><div class="sname">${esc(s.name)}</div><div class="srole">${esc(s.role)}</div><div class="sdesc">${esc(s.description)}</div></div>`).join('')}
+    </div>
+  </div>
+
+  ${vocHTML}
+
+  <div class="sec">
+    <div class="sec-title">🎚 MIXING TIPS</div>
+    ${mixHTML}
+    <div style="margin-top:1.4rem">
+      <div class="slabel">Reference Beats to Study</div>
+      <div class="refs">${g.referenceBeats.map(r=>`<div class="ref">🎵 ${esc(r)}</div>`).join('')}</div>
+    </div>
+  </div>`;
+
+  R.classList.add('show');
+  setTimeout(()=>R.scrollIntoView({behavior:'smooth',block:'start'}),80);
+}
+
+function esc(s){
+  if(s==null)return'';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
